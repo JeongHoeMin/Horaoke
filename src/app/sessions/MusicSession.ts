@@ -22,13 +22,13 @@ export class MusicSession {
     this.connectChain();
   }
 
-  private async connectChain(): Promise<void> {
+  connectChain(): void {
     const out = this._track.output();
     if (!out) return;
 
     const bus = this._mixer.bus();
 
-    if (this._pitch.insert) await this._pitch.insert(out, bus);
+    if (this._pitch.insert) this._pitch.insert(out, bus);
     else out.connect(bus);
   }
 
