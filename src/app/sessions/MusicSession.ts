@@ -19,17 +19,26 @@ export class MusicSession {
 
   async prepare(): Promise<void> {
     await this._track.prepare();
-    this.connectChain();
+    await this.connectChain();
   }
 
-  connectChain(): void {
+  private async connectChain(): Promise<void> {
     const out = this._track.output();
     if (!out) return;
 
     const bus = this._mixer.bus();
 
-    if (this._pitch.insert) this._pitch.insert(out, bus);
-    else out.connect(bus);
+    try {
+      out.disconnect();
+    } catch {}
+
+    try {
+      if (this._pitch.insert) this._pitch.insert(out, bus);
+      else out.connect(bus);
+    } catch (err) {
+      console.warn('[MusicSession] pitch insert failed, fallback to direct connect:', err);
+      out.connect(bus);
+    }
   }
 
   async play(): Promise<void> {

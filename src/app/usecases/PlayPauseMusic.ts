@@ -8,6 +8,7 @@ export class PlayPauseMusic {
   }
 
   async play(): Promise<void> {
+    await this._session.ctx().get().resume();
     await this._session.music()?.play();
   }
 

@@ -1,6 +1,8 @@
 import type {IAudioTrack} from "../IAudioTrack.ts";
 import type {IAudioContextProvider} from "../IAudioContextProvider.ts";
 
+const SRC_NODE_CACHE = new WeakMap<HTMLMediaElement, MediaElementAudioSourceNode>();
+
 export class MusicElementTrack implements IAudioTrack {
   private readonly _el: HTMLAudioElement;
   private _srcNode: MediaElementAudioSourceNode | null = null;
@@ -23,14 +25,36 @@ export class MusicElementTrack implements IAudioTrack {
 
   async prepare(): Promise<void> {
     if (this._isReady) return;
-    await new Promise<void>(res => {
-      this._el.oncanplay = () => res();
+    await new Promise<void>((res, rej) => {
+      const onCanPlay = () => {
+        cleanup();
+        res();
+      };
+      const onError = () => {
+        cleanup();
+        rej(this._el.error);
+      }
+      const cleanup = () => {
+        this._el.removeEventListener('canplay', onCanPlay)
+        this._el.removeEventListener('error', onError)
+      };
+
+      if (this._el.readyState >= 3) return res();
+      this._el.addEventListener('canplay', onCanPlay);
+      this._el.addEventListener('error', onError);
+      this._el.load();
     });
+
     const ctx = this._ctxp.get();
-    this._srcNode = ctx.createMediaElementSource(this._el);
+
+    this._srcNode = SRC_NODE_CACHE.get(this._el) ?? ctx.createMediaElementSource(this._el);
+    SRC_NODE_CACHE.set(this._el, this._srcNode);
+
     this._gain = ctx.createGain();
     this._gain.gain.value = 1.0;
+
     this._srcNode.connect(this._gain);
+
     this._isReady = true;
   }
 
@@ -57,7 +81,9 @@ export class MusicElementTrack implements IAudioTrack {
     if (this._gain) this._gain.gain.value = v;
   }
 
-  element(): HTMLAudioElement {
-    return this._el;
+  async replaceSource(url: string) {
+    this._el.src = url;
+    this._isReady = false;
+    await this.prepare();
   }
 }

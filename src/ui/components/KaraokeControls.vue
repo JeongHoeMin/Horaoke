@@ -45,6 +45,18 @@ async function onPickFile(e: Event) {
   if (!f || !audioRef.value) return;
 
   await api.attachMusicFromFile(audioRef.value, f);
+
+  if (audioRef.value.readyState < 3) {
+    await new Promise<void>((res) => {
+      const onReady = () => {
+        audioRef.value?.removeEventListener('canplay', onReady);
+        res();
+      }
+      audioRef.value?.addEventListener('canplay', onReady);
+      audioRef.value?.load();
+    })
+  }
+
   hasMusic.value = true;
 }
 
