@@ -44,7 +44,7 @@ export class MicSession {
 
     const micGainOut = this._micGain.inputNode();
     this._delayFx.connect(micGainOut, bus);
-    this._reverbFx.connect(micGainOut.bus);
+    this._reverbFx.connect(micGainOut, bus);
   }
 
   setMicGain(v: number): void {

@@ -1,4 +1,4 @@
-import type {KaraokeSession} from "../services/KaraokeSession.ts";
+import type {KaraokeSession} from "../sessions/KaraokeSession.ts";
 
 export class SetPitch {
   private _session: KaraokeSession

@@ -40,12 +40,19 @@ async function onMic() {
 }
 
 // 파일 선택 시
-async function onPick(e: Event) {
+async function onPickFile(e: Event) {
   const f = (e.target as HTMLInputElement).files?.[0];
   if (!f || !audioRef.value) return;
 
   await api.attachMusicFromFile(audioRef.value, f);
   hasMusic.value = true;
+}
+
+async function onPickUrl() {
+  const url: string | null = prompt('음원 url 입력: ');
+  if (!url || !audioRef.value) return;
+
+  await api.attachMusicFromUrl(audioRef.value, url);
 }
 
 async function onMusic() {
@@ -93,8 +100,15 @@ function applyMaster() {
     </div>
 
     <div>
-      <label>노래 파일: </label>
-      <input type="file" accept="audio/*" @change="onPick" />
+      <div>
+        <label>노래 파일: </label>
+        <input type="file" accept="audio/*" @change="onPickFile" />
+      </div>
+
+      <div>
+        <label>노래 URL: </label>
+        <button @click="onPickUrl">선택</button>
+      </div>
     </div>
 
     <div class="space-x-2" v-if="hasMusic">
